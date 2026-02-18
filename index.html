@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0f1e">
+    <title>Ramadan Sun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loader" class="loader">
+        <div class="crescent-loader">☪</div>
+        <p>Loading Ramadan Times...</p>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="skyCanvas"></canvas>
+    <div class="pattern-overlay"></div>
+    
+    <!-- Lanterns -->
+    <div class="lantern lantern-1">🏮</div>
+    <div class="lantern lantern-2">🏮</div>
+    <div class="lantern lantern-3">🏮</div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header with City Selector -->
+        <header class="header">
+            <div class="location-badge">
+                <span class="crescent-icon">🌙</span>
+                <div class="city-select-wrapper">
+                    <select id="citySelect" class="city-select">
+                        <option value="shakargarh">Shakargarh, Pakistan</option>
+                        <option value="sydney">Sydney, Australia</option>
+                        <option value="lahore">Lahore, Pakistan</option>
+                        <option value="london">London, UK</option>
+                    </select>
+                    <span class="dropdown-arrow">▼</span>
+                </div>
+            </div>
+            <div class="date-display" id="dateDisplay">Loading...</div>
+        </header>
+
+        <!-- Next Prayer Card (Dynamic) -->
+        <div class="next-prayer-card" id="nextPrayerCard">
+            <div class="next-prayer-icon" id="nextPrayerIcon">🕐</div>
+            <div class="next-prayer-label">Next Prayer</div>
+            <div class="next-prayer-name" id="nextPrayerName">Loading...</div>
+            <div class="countdown-large" id="nextPrayerCountdown">--:--:--</div>
+            <div class="next-prayer-sub" id="nextPrayerSub">Time remaining</div>
+        </div>
+
+        <!-- Progress Bar with 5 Milestones -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-label">Day Progress</span>
+                <span class="progress-percent" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar-container">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <!-- Milestones -->
+                <div class="milestones-container">
+                    <div class="milestone" data-prayer="sehar">
+                        <div class="milestone-dot" id="dot-sehar"></div>
+                        <div class="milestone-label">Sehar</div>
+                        <div class="milestone-time" id="time-sehar">--:--</div>
+                    </div>
+                    <div class="milestone" data-prayer="duhr">
+                        <div class="milestone-dot" id="dot-duhr"></div>
+                        <div class="milestone-label">Duhr</div>
+                        <div class="milestone-time" id="time-duhr">--:--</div>
+                    </div>
+                    <div class="milestone" data-prayer="asr">
+                        <div class="milestone-dot" id="dot-asr"></div>
+                        <div class="milestone-label">Asr</div>
+                        <div class="milestone-time" id="time-asr">--:--</div>
+                    </div>
+                    <div class="milestone" data-prayer="iftar">
+                        <div class="milestone-dot" id="dot-iftar"></div>
+                        <div class="milestone-label">Iftar</div>
+                        <div class="milestone-time" id="time-iftar">--:--</div>
+                    </div>
+                    <div class="milestone" data-prayer="isha">
+                        <div class="milestone-dot" id="dot-isha"></div>
+                        <div class="milestone-label">Isha</div>
+                        <div class="milestone-time" id="time-isha">--:--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Prayer Times Grid -->
+        <div class="cards-grid">
+            <div class="time-card" id="card-sehar">
+                <div class="card-icon">🌅</div>
+                <div class="card-label">Sehar</div>
+                <div class="card-time" id="display-sehar">--:--</div>
+            </div>
+            <div class="time-card" id="card-duhr">
+                <div class="card-icon">☀️</div>
+                <div class="card-label">Duhr</div>
+                <div class="card-time" id="display-duhr">--:--</div>
+            </div>
+            <div class="time-card" id="card-asr">
+                <div class="card-icon">🌤️</div>
+                <div class="card-label">Asr</div>
+                <div class="card-time" id="display-asr">--:--</div>
+            </div>
+            <div class="time-card highlight" id="card-iftar">
+                <div class="card-icon">🌇</div>
+                <div class="card-label">Iftar</div>
+                <div class="card-time" id="display-iftar">--:--</div>
+            </div>
+            <div class="time-card" id="card-isha">
+                <div class="card-icon">🌙</div>
+                <div class="card-label">Isha</div>
+                <div class="card-time" id="display-isha">--:--</div>
+            </div>
+        </div>
+
+        <div class="day-info">
+            <span class="ramadan-badge">Ramadan 1447 AH</span>
+            <span class="phase-indicator" id="phaseIndicator">Night</span>
+        </div>
+    </div>
+
+    <!-- Urdu Footer -->
+    <div class="urdu-footer">
+        <p class="urdu-text" dir="rtl" lang="ur">رمضان مبارک!   آپ کا دعا گو،
+ شہریار چوہدری</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
