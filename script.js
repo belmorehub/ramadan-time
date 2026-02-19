@@ -659,14 +659,6 @@ class RamadanApp {
             document.getElementById(`time-${prayer}`).textContent = data[prayer];
         });
         
-        // Position milestones proportionally
-        const totalDuration = times.isha - times.sehar;
-        ['sehar', 'duhr', 'asr', 'iftar', 'isha'].forEach(prayer => {
-            const milestone = document.querySelector(`.milestone[data-prayer="${prayer}"]`);
-            const position = ((times[prayer] - times.sehar) / totalDuration) * 100;
-            milestone.style.left = position + '%';
-        });
-        
         // Find next prayer
         const next = this.findNextPrayer(now, times);
         const diff = next.time - now;
@@ -691,16 +683,20 @@ class RamadanApp {
             progress = 0;
         } else if (now >= times.sehar && now < times.duhr) {
             phase = 'dawn';
-            progress = (now - times.sehar) / (times.isha - times.sehar);
+            // Segment 0-25%: Sehar to Duhr
+            progress = 0.0 + (now - times.sehar) / (times.duhr - times.sehar) * 0.25;
         } else if (now >= times.duhr && now < times.asr) {
             phase = 'day';
-            progress = (now - times.sehar) / (times.isha - times.sehar);
+            // Segment 25-50%: Duhr to Asr
+            progress = 0.25 + (now - times.duhr) / (times.asr - times.duhr) * 0.25;
         } else if (now >= times.asr && now < times.iftar) {
             phase = 'evening';
-            progress = (now - times.sehar) / (times.isha - times.sehar);
+            // Segment 50-75%: Asr to Iftar
+            progress = 0.50 + (now - times.asr) / (times.iftar - times.asr) * 0.25;
         } else if (now >= times.iftar && now < times.isha) {
             phase = 'evening';
-            progress = (now - times.sehar) / (times.isha - times.sehar);
+            // Segment 75-100%: Iftar to Isha
+            progress = 0.75 + (now - times.iftar) / (times.isha - times.iftar) * 0.25;
         } else {
             phase = 'night';
             progress = 1; // after isha, night
