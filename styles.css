@@ -144,19 +144,24 @@ html, body {
 }
 
 .city-select {
-    background: transparent;
-    border: none;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,215,0,0.08);
     color: var(--lantern-gold);
     font-family: 'Cinzel', serif;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    padding-right: 20px;
+    padding: 8px 28px 8px 8px;
     appearance: none;
     -webkit-appearance: none;
     outline: none;
-    width: 140px;
+    width: 180px;
+    border-radius: 999px;
+    transition: background 200ms ease, border-color 200ms ease;
 }
+
+/* reveal full text styling on focus */
+.city-select:focus { color: var(--lantern-gold); background: rgba(255,255,255,0.03); border-color: rgba(255,215,0,0.18); }
 
 .city-select option {
     background: var(--midnight);
@@ -209,19 +214,16 @@ html, body {
     padding-left: 6px;
 }
 
-/* Hide the overlay when the select is focused/opened */
-.city-select-wrapper:focus-within .city-select-overlay { /* keep visible; text will change via JS */
-}
-
-/* Make the select's visible text transparent so overlay shows through (only affects closed view) */
-.city-select { color: transparent; }
+/* Hide the overlay when the select is focused/opened so native dropdown is unobstructed */
+.city-select-wrapper:focus-within .city-select-overlay { display: none; }
 
 .dropdown-arrow {
     position: absolute;
     right: 0;
     color: var(--lantern-gold);
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     pointer-events: none;
+    padding: 0 8px;
 }
 
 .date-display {

@@ -203,8 +203,8 @@ class RamadanApp {
             if (sel) sel.value = saved;
         }
 
-        // Update overlay that shows country-only when closed
-        this.updateCityOverlay();
+        // Prepare option texts (city-only when closed, city+country when open)
+        this.prepareOptionTexts();
 
         // Start silent IP detection (may override or suggest)
         this.detectByIP();
@@ -253,15 +253,15 @@ class RamadanApp {
             this.loadCity(this.currentCity);
             // persist manual override
             try { localStorage.setItem('selectedCity', this.currentCity); } catch (e) {}
-            // update overlay country text
-            this.updateCityOverlay();
+            // ensure options return to closed (city-only) appearance
+            this.setOptionTexts(false);
         });
 
         // show full "City, Country" while the select is focused/open
         const sel = document.getElementById('citySelect');
         if (sel) {
-            sel.addEventListener('focus', () => this.updateCityOverlay(true));
-            sel.addEventListener('blur', () => this.updateCityOverlay(false));
+            sel.addEventListener('focus', () => this.setOptionTexts(true));
+            sel.addEventListener('blur', () => this.setOptionTexts(false));
         }
 
         // Suggestion buttons
@@ -281,19 +281,25 @@ class RamadanApp {
         });
     }
 
-    updateCityOverlay(showFull=false) {
-        try {
-            const sel = document.getElementById('citySelect');
-            const overlay = document.getElementById('cityOverlay');
-            if (!sel || !overlay) return;
-            const opt = sel.options[sel.selectedIndex];
-            if (!opt) { overlay.textContent = ''; return; }
+    prepareOptionTexts() {
+        const sel = document.getElementById('citySelect');
+        if (!sel) return;
+        for (const opt of sel.options) {
+            if (!opt.dataset.full) {
+                opt.dataset.full = (opt.text || '').trim();
+                opt.dataset.city = (opt.text || '').split(',')[0].trim();
+            }
+        }
+        // default to city-only display
+        this.setOptionTexts(false);
+    }
 
-            const fullText = (opt.text || '').trim(); // "City, Country"
-            const cityOnly = (opt.text || '').split(',')[0].trim();
-
-            overlay.textContent = showFull ? fullText : cityOnly;
-        } catch (e) {}
+    setOptionTexts(showFull) {
+        const sel = document.getElementById('citySelect');
+        if (!sel) return;
+        for (const opt of sel.options) {
+            opt.text = showFull ? (opt.dataset.full || opt.text) : (opt.dataset.city || opt.text);
+        }
     }
 
     async detectByIP() {
