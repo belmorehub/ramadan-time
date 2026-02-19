@@ -397,12 +397,7 @@ html, body {
     font-weight: bold;
 }
 
-/* Position milestones at 0%, 25%, 50%, 75%, 100% */
-.milestone[data-prayer="sehar"] { left: 0%; }
-.milestone[data-prayer="duhr"] { left: 25%; }
-.milestone[data-prayer="asr"] { left: 50%; }
-.milestone[data-prayer="iftar"] { left: 75%; }
-.milestone[data-prayer="isha"] { left: 100%; }
+/* Milestones positioned dynamically via JavaScript */
 
 /* Prayer Cards Grid */
 .cards-grid {

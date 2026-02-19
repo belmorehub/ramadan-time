@@ -659,6 +659,14 @@ class RamadanApp {
             document.getElementById(`time-${prayer}`).textContent = data[prayer];
         });
         
+        // Position milestones proportionally
+        const totalDuration = times.isha - times.sehar;
+        ['sehar', 'duhr', 'asr', 'iftar', 'isha'].forEach(prayer => {
+            const milestone = document.querySelector(`.milestone[data-prayer="${prayer}"]`);
+            const position = ((times[prayer] - times.sehar) / totalDuration) * 100;
+            milestone.style.left = position + '%';
+        });
+        
         // Find next prayer
         const next = this.findNextPrayer(now, times);
         const diff = next.time - now;
@@ -683,16 +691,16 @@ class RamadanApp {
             progress = 0;
         } else if (now >= times.sehar && now < times.duhr) {
             phase = 'dawn';
-            progress = (now - times.sehar) / (times.iftar - times.sehar);
+            progress = (now - times.sehar) / (times.isha - times.sehar);
         } else if (now >= times.duhr && now < times.asr) {
             phase = 'day';
-            progress = (now - times.sehar) / (times.iftar - times.sehar);
+            progress = (now - times.sehar) / (times.isha - times.sehar);
         } else if (now >= times.asr && now < times.iftar) {
             phase = 'evening';
-            progress = (now - times.sehar) / (times.iftar - times.sehar);
+            progress = (now - times.sehar) / (times.isha - times.sehar);
         } else if (now >= times.iftar && now < times.isha) {
             phase = 'evening';
-            progress = 1; // after iftar, sun is set, but we may still show evening sky
+            progress = (now - times.sehar) / (times.isha - times.sehar);
         } else {
             phase = 'night';
             progress = 1; // after isha, night
