@@ -3,6 +3,7 @@ const RAMADAN_DATA = {
     shakargarh: {
         name: "Shakargarh",
         country: "Pakistan",
+        coords: { lat: 32.2716, lon: 75.1584 },
         schedule: [
             { "date": "2026-02-18", "sehar": "05:17", "duhr": "12:13", "asr": "16:09", "iftar": "17:48", "isha": "19:10" },
             { "date": "2026-02-19", "sehar": "05:16", "duhr": "12:13", "asr": "16:10", "iftar": "17:49", "isha": "19:11" },
@@ -51,6 +52,7 @@ const RAMADAN_DATA = {
     sydney: {
         name: "Sydney",
         country: "Australia",
+        coords: { lat: -33.8688, lon: 151.2093 },
         schedule: [
             { "date": "2026-02-18", "sehar": "05:05", "duhr": "13:10", "asr": "16:51", "iftar": "19:47", "isha": "21:11" },
             { "date": "2026-02-19", "sehar": "05:06", "duhr": "13:10", "asr": "16:50", "iftar": "19:46", "isha": "21:09" },
@@ -86,6 +88,7 @@ const RAMADAN_DATA = {
     lahore: {
         name: "Lahore",
         country: "Pakistan",
+        coords: { lat: 31.5204, lon: 74.3587 },
         schedule: [
             { "date": "2026-03-01", "sehar": "05:09", "duhr": "12:15", "asr": "15:32", "iftar": "18:01", "isha": "19:17" },
             { "date": "2026-03-02", "sehar": "05:08", "duhr": "12:15", "asr": "15:33", "iftar": "18:02", "isha": "19:18" },
@@ -123,6 +126,7 @@ const RAMADAN_DATA = {
     london: {
         name: "London",
         country: "United Kingdom",
+        coords: { lat: 51.5074, lon: -0.1278 },
         schedule: [
             { "date": "2026-02-18", "sehar": "05:30", "duhr": "12:19", "asr": "14:50", "iftar": "17:23", "isha": "18:51" },
             { "date": "2026-02-19", "sehar": "05:28", "duhr": "12:19", "asr": "14:52", "iftar": "17:25", "isha": "18:53" },
@@ -169,7 +173,7 @@ const RAMADAN_DATA = {
         ]
     }
 };
-
+ 
 class RamadanApp {
     constructor() {
         this.canvas = document.getElementById('skyCanvas');
@@ -190,6 +194,22 @@ class RamadanApp {
         this.setupCanvas();
         this.createStars();
         this.setupEventListeners();
+
+        // If user previously selected a city, use it
+        const saved = localStorage.getItem('selectedCity');
+        if (saved && RAMADAN_DATA[saved]) {
+            this.currentCity = saved;
+            const sel = document.getElementById('citySelect');
+            if (sel) sel.value = saved;
+        }
+
+        // Update overlay that shows country-only when closed
+        this.updateCityOverlay();
+
+        // Start silent IP detection (may override or suggest)
+        this.detectByIP();
+
+        // Load initial city schedule
         this.loadCity(this.currentCity);
         
         // Start loop
@@ -231,7 +251,209 @@ class RamadanApp {
         document.getElementById('citySelect').addEventListener('change', (e) => {
             this.currentCity = e.target.value;
             this.loadCity(this.currentCity);
+            // persist manual override
+            try { localStorage.setItem('selectedCity', this.currentCity); } catch (e) {}
+            // update overlay country text
+            this.updateCityOverlay();
         });
+
+        // show full "City, Country" while the select is focused/open
+        const sel = document.getElementById('citySelect');
+        if (sel) {
+            sel.addEventListener('focus', () => this.updateCityOverlay(true));
+            sel.addEventListener('blur', () => this.updateCityOverlay(false));
+        }
+
+        // Suggestion buttons
+        const yes = document.getElementById('suggestYes');
+        const no = document.getElementById('suggestNo');
+        if (yes) yes.addEventListener('click', () => {
+            const key = sessionStorage.getItem('locationSuggestionKey');
+            if (key && RAMADAN_DATA[key]) {
+                this.applyDetectedCity(key, true);
+            }
+            this.hideSuggestion();
+        });
+        if (no) no.addEventListener('click', () => {
+            // remember dismissal for this session
+            sessionStorage.setItem('locationSuggestionDismissed', '1');
+            this.hideSuggestion();
+        });
+    }
+
+    updateCityOverlay(showFull=false) {
+        try {
+            const sel = document.getElementById('citySelect');
+            const overlay = document.getElementById('cityOverlay');
+            if (!sel || !overlay) return;
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt) { overlay.textContent = ''; return; }
+
+            const fullText = (opt.text || '').trim(); // "City, Country"
+            const cityOnly = (opt.text || '').split(',')[0].trim();
+
+            overlay.textContent = showFull ? fullText : cityOnly;
+        } catch (e) {}
+    }
+
+    async detectByIP() {
+        // Do not show suggestion if user already dismissed this session
+        if (sessionStorage.getItem('locationSuggestionDismissed')) return;
+
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            // Use ipapi.co for silent IP detection
+            const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+            clearTimeout(timeout);
+            if (!res.ok) return;
+            const data = await res.json();
+            // Normalize ipapi response to shape expected by handleIPInfo
+            // ipapi returns fields like: city, region, country_name, latitude, longitude
+            const lat = data.latitude || data.lat || null;
+            const lon = data.longitude || data.lon || null;
+            const loc = (lat && lon) ? `${lat},${lon}` : (data.loc || '');
+            const info = {
+                city: data.city || '',
+                region: data.region || '',
+                country: data.country_name || data.country || '',
+                loc,
+                ip: data.ip || data.ip_address || ''
+            };
+            this.handleIPInfo(info);
+        } catch (e) {
+            // silent fail
+        }
+    }
+
+    handleIPInfo(info) {
+        // show Urdu footer for first time per IP
+        try { this.showUrduFooterIfFirstTime(info); } catch (e) {}
+
+        if (!info) return;
+        const ipCity = info.city || '';
+        const loc = info.loc || ''; // "lat,lon"
+
+        // Try exact match by name
+        const exact = this.findExactMatch(ipCity);
+        if (exact) {
+            // If matches current selection, nothing to do
+            if (exact !== this.currentCity) this.applyDetectedCity(exact, true);
+            return;
+        }
+
+        // Try coords-based match
+        if (loc) {
+            const [latStr, lonStr] = loc.split(',');
+            const lat = parseFloat(latStr);
+            const lon = parseFloat(lonStr);
+            if (!isNaN(lat) && !isNaN(lon)) {
+                const nearest = this.findNearestByCoords(lat, lon);
+                if (nearest && nearest.key) {
+                    // Auto-apply if very close (<50 km)
+                    if (nearest.dist <= 50) {
+                        if (nearest.key !== this.currentCity) this.applyDetectedCity(nearest.key, true);
+                        return;
+                    }
+                    // Suggest if moderately close (<200 km)
+                    if (nearest.dist <= 200) {
+                        this.showSuggestion(nearest.key);
+                        return;
+                    }
+                }
+            }
+        }
+        // otherwise, do nothing
+    }
+
+    findExactMatch(cityName) {
+        if (!cityName) return null;
+        const target = cityName.trim().toLowerCase();
+        for (const key in RAMADAN_DATA) {
+            if (RAMADAN_DATA.hasOwnProperty(key)) {
+                const dname = (RAMADAN_DATA[key].name || '').toString().trim().toLowerCase();
+                if (dname === target) return key;
+            }
+        }
+        // Also check visible select option labels
+        const sel = document.getElementById('citySelect');
+        if (sel) {
+            for (const opt of sel.options) {
+                if ((opt.text || '').trim().toLowerCase().startsWith(target)) return opt.value;
+            }
+        }
+        return null;
+    }
+
+    haversineDistance(lat1, lon1, lat2, lon2) {
+        // returns kilometers
+        const toRad = (v) => v * Math.PI / 180;
+        const R = 6371; // km
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    findNearestByCoords(lat, lon) {
+        let best = { key: null, dist: Infinity };
+        for (const key in RAMADAN_DATA) {
+            if (!RAMADAN_DATA.hasOwnProperty(key)) continue;
+            const c = RAMADAN_DATA[key].coords;
+            if (!c) continue;
+            const d = this.haversineDistance(lat, lon, c.lat, c.lon);
+            if (d < best.dist) best = { key, dist: d };
+        }
+        return best;
+    }
+
+    showSuggestion(key) {
+        if (!key || !RAMADAN_DATA[key]) return;
+        // if user already dismissed this session, don't show
+        if (sessionStorage.getItem('locationSuggestionDismissed')) return;
+
+        const el = document.getElementById('locationSuggestion');
+        const txt = document.getElementById('suggestionText');
+        if (el && txt) {
+            txt.textContent = `We think you're near ${RAMADAN_DATA[key].name}. Is this correct?`;
+            el.style.display = 'block';
+            sessionStorage.setItem('locationSuggestionKey', key);
+        }
+    }
+
+    hideSuggestion() {
+        const el = document.getElementById('locationSuggestion');
+        if (el) el.style.display = 'none';
+        sessionStorage.removeItem('locationSuggestionKey');
+    }
+
+    applyDetectedCity(key, autoApply=false) {
+        if (!key || !RAMADAN_DATA[key]) return;
+        this.currentCity = key;
+        const sel = document.getElementById('citySelect');
+        if (sel) sel.value = key;
+        this.loadCity(key);
+        // Persist choice if auto-applied or user accepted suggestion
+        if (autoApply) {
+            try { localStorage.setItem('selectedCity', key); } catch (e) {}
+        }
+    }
+
+    showUrduFooterIfFirstTime(info) {
+        if (!info || !info.ip) return;
+        try {
+            const ip = info.ip.toString();
+            const key = 'urduFooterSeen_' + ip;
+            if (localStorage.getItem(key)) return; // already shown for this IP
+            // mark shown
+            try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
+            // reveal footer
+            const footer = document.querySelector('.urdu-footer');
+            if (footer) footer.classList.add('visible');
+        } catch (e) {}
     }
     
     loadCity(cityKey) {

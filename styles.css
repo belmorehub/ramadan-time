@@ -164,6 +164,58 @@ html, body {
     font-family: 'Cinzel', serif;
 }
 
+/* Location suggestion (gentle, non-modal) */
+.location-suggestion {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-gold);
+    background: rgba(10,15,30,0.65);
+    border: 1px solid rgba(255,215,0,0.12);
+    padding: 6px 10px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+.location-suggestion button {
+    background: transparent;
+    border: 1px solid rgba(255,215,0,0.15);
+    color: var(--lantern-gold);
+    padding: 4px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.location-suggestion button:hover {
+    background: rgba(255,215,0,0.06);
+}
+
+/* Overlay that shows only the country when the select is closed */
+.city-select-wrapper {
+    position: relative;
+}
+
+.city-select-overlay {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--lantern-gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    padding-left: 6px;
+}
+
+/* Hide the overlay when the select is focused/opened */
+.city-select-wrapper:focus-within .city-select-overlay { /* keep visible; text will change via JS */
+}
+
+/* Make the select's visible text transparent so overlay shows through (only affects closed view) */
+.city-select { color: transparent; }
+
 .dropdown-arrow {
     position: absolute;
     right: 0;
@@ -443,6 +495,11 @@ html, body {
     background: linear-gradient(to top, rgba(10, 15, 30, 0.95) 60%, transparent);
     padding: 20px;
     pointer-events: none;
+    display: none; /* hidden by default; shown first time per IP */
+}
+
+.urdu-footer.visible {
+    display: block;
 }
 
 .urdu-text {

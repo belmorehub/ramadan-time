@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a0f1e">
-    <title>Ramadan Sun</title>
+    <title>Ramadan Mubarak</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
@@ -34,13 +34,15 @@
                 <span class="crescent-icon">🌙</span>
                 <div class="city-select-wrapper">
                     <select id="citySelect" class="city-select">
-                        <option value="shakargarh">Shakargarh, Pakistan</option>
-                        <option value="sydney">Sydney, Australia</option>
-                        <option value="lahore">Lahore, Pakistan</option>
-                        <option value="london">London, UK</option>
+                        <option value="shakargarh" data-country="Pakistan">Shakargarh, Pakistan</option>
+                        <option value="sydney" data-country="Australia">Sydney, Australia</option>
+                        <option value="lahore" data-country="Pakistan">Lahore, Pakistan</option>
+                        <option value="london" data-country="United Kingdom">London, UK</option>
                     </select>
+                    <span id="cityOverlay" class="city-select-overlay" aria-hidden="true"></span>
                     <span class="dropdown-arrow">▼</span>
                 </div>
+                
             </div>
             <div class="date-display" id="dateDisplay">Loading...</div>
         </header>
